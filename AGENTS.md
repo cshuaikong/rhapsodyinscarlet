@@ -143,3 +143,12 @@ These behaviors are NOT obvious from the docs and cost significant debugging tim
 5. **`src/content/<locale>/` triggers legacy auto-collection.** If MDX files sit directly under `src/content/<locale>/`, Astro 5 auto-generates a collection named after the locale and prints a deprecation warning. The fix: put content under a named collection dir like `src/content/wiki/<locale>/`, with `glob({ base: './src/content/wiki' })`.
 
 6. **`prefixDefaultLocale: false` means `/` is the English homepage.** Do NOT redirect `/` to `/en/`. The English homepage lives at `src/pages/index.astro`; non-default locales live at `src/pages/[locale]/index.astro`. Similarly, English content routes are at `src/pages/[...slug].astro` (no locale segment), other locales at `src/pages/[locale]/[...slug].astro`.
+
+
+<claude-mem-context>
+# Memory Context
+
+# [rhapsodyinscarlet] recent context, 2026-09-04 3:34pm GMT+8
+
+No previous sessions found.
+</claude-mem-context>
