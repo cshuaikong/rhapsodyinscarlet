@@ -31,9 +31,6 @@ const overview = (
 const navItem = NAVIGATION_CONFIG.find((n) => n.key === category);
 
 const title = overview?.overviewTitle ?? nav[category] ?? category;
-// Localized default (locale JSON shared.defaultListDescription) — a hardcoded
-// English sentence here would leak into every locale the moment a fork adds
-// a 5th category without an overview entry.
 const description =
   overview?.overviewDescription ??
   String(shared.defaultListDescription ?? '').replace('{title}', title) ??
@@ -42,8 +39,6 @@ const description =
 const entries = await getEntriesByCategory(category, locale);
 
 const jsonLd = [
-  // Empty ItemList (itemListElement: []) is invalid structured data — only
-  // inject when the list actually has entries (breadcrumb stays either way).
   ...(entries.length > 0
     ? [
         itemListJsonLd({
@@ -66,9 +61,6 @@ const jsonLd = [
 ];
 ---
 
-<!-- An empty list is a ~100-word thin-content page (NMS /starships was indexed
-     as one). noindex keeps it out of Google until real articles exist; the
-     sitemap filter excludes the same paths (astro.config.ts). -->
 <LocaleLayout
   locale={locale}
   title={pageTitle(title)}
@@ -98,21 +90,79 @@ const jsonLd = [
           <p class="mt-3 text-muted-foreground">{shared.noArticles}</p>
         </div>
       ) : (
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {entries.map((entry) => {
             const slug = parseEntryId(entry.id)?.slug ?? '';
+            const primaryTag = entry.data.tags[0];
             return (
-              <a href={detailPath(category, slug, locale)} class="card p-5">
-                {entry.data.image && <ArticleCover src={entry.data.image} />}
-                <h2 class="font-semibold leading-snug">{entry.data.title}</h2>
-                <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                  {entry.data.description}
-                </p>
-                <p class="mt-3 text-xs text-muted-foreground">
-                  {entry.data.lastModified
-                    ? `${shared.lastUpdated}: ${entry.data.lastModified.toLocaleDateString(locale, { timeZone: 'UTC' })}`
-                    : `${shared.publishedOn}: ${entry.data.date.toLocaleDateString(locale, { timeZone: 'UTC' })}`}
-                </p>
+              <a
+                href={detailPath(category, slug, locale)}
+                class="group card overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl hover:border-nav/40"
+              >
+                {/* Full-bleed image with text overlay */}
+                {entry.data.image ? (
+                  <div class="relative h-[28rem] overflow-hidden">
+                    {/* Cover image fills the card — object-contain shows full image */}
+                    <ArticleCover
+                      src={entry.data.image}
+                      class="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                    />
+
+                    {/* Bottom gradient mask — from solid dark to transparent */}
+                    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black/90 via-black/60 to-transparent" />
+
+                    {/* Top-right category badge */}
+                    {primaryTag && (
+                      <span class="absolute right-3 top-3 rounded-full bg-nav px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white shadow-lg">
+                        {primaryTag}
+                      </span>
+                    )}
+
+                    {/* Text overlay at bottom */}
+                    <div class="absolute inset-x-0 bottom-0 p-5">
+                      {/* Title — white with glow */}
+                      <h2 class="text-xl font-extrabold leading-tight text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] transition-all duration-300 group-hover:text-nav-light group-hover:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                        {entry.data.title}
+                      </h2>
+
+                      {/* Description — slightly dimmed white */}
+                      <p class="mt-2 line-clamp-2 text-sm leading-relaxed text-white/85 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
+                        {entry.data.description}
+                      </p>
+
+                      {/* Tags + date row */}
+                      <div class="mt-3 flex items-center justify-between">
+                        <div class="flex flex-wrap gap-1.5">
+                          {entry.data.tags.slice(0, 2).map((tag: string) => (
+                            <span class="rounded bg-white/15 px-2 py-0.5 text-[10px] font-medium text-white/90 backdrop-blur-sm">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                        <span class="text-[10px] font-medium text-white/60">
+                          {entry.data.lastModified
+                            ? entry.data.lastModified.toLocaleDateString(locale, { timeZone: 'UTC', month: 'short', day: 'numeric' })
+                            : entry.data.date.toLocaleDateString(locale, { timeZone: 'UTC', month: 'short', day: 'numeric' })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  /* Fallback for articles without a cover image */
+                  <div class="flex h-[28rem] flex-col justify-end bg-gradient-to-b from-muted to-muted/50 p-5">
+                    <h2 class="text-xl font-extrabold text-nav">
+                      {entry.data.title}
+                    </h2>
+                    <p class="mt-2 line-clamp-2 text-sm text-muted-foreground">
+                      {entry.data.description}
+                    </p>
+                    <div class="mt-3 flex items-center gap-2 text-xs text-muted-foreground/70">
+                      <Icon name="lucide:calendar" class="h-3 w-3" />
+                      {entry.data.date.toLocaleDateString(locale, { timeZone: 'UTC' })}
+                    </div>
+                  </div>
+                )}
               </a>
             );
           })}

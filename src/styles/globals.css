@@ -149,6 +149,33 @@
     border-radius: 0.5rem;
     background-color: hsl(var(--muted));
   }
+
+  /* Character "Quick Facts" (wiki/en/characters/*.mdx): the portrait image
+     has a fixed aspect and is usually taller than the facts table, leaving
+     the table bottom floating mid-air. Stretch the table to the flex row
+     height so image and table align top AND bottom; the extra height is
+     distributed across rows by table layout. display:table restores real
+     table layout (the mobile block/scroll fix above would keep the inner
+     rows from stretching). lg+ only — below lg the two stack vertically
+     and height matching is meaningless. Placed after `.prose table` so it
+     wins at equal specificity. */
+  /* Breathing room between the Attribute and Detail columns — the two
+     columns sit too close otherwise. Applies on all viewports. */
+  .quick-facts th,
+  .quick-facts td {
+    padding: 0.25rem 0;
+  }
+  .quick-facts th:first-child,
+  .quick-facts td:first-child {
+    padding-right: 2.5rem;
+  }
+
+  @media (min-width: 1024px) {
+    .quick-facts table {
+      display: table;
+      height: 100%;
+    }
+  }
 }
 
 /* Print styles — readers printing long guides get clean content only:
