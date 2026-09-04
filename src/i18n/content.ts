@@ -66,7 +66,11 @@ export async function getEntryWithFallback(
   }
 
   // 2. Fall back to English (default locale).
-  if (locale !== defaultLocale) {
+  // Widened to string on purpose: with a single configured locale, comparing
+  // Locale against defaultLocale narrows `locale` to `never`, TS marks this
+  // branch dead, and astro:content's getEntry overloads collapse to never.
+  // The branch becomes live again as soon as a second language is added.
+  if ((locale as string) !== (defaultLocale as string)) {
     const fallback = await getEntry('wiki', `${defaultLocale}/${category}/${slug}`);
     if (fallback && isPublished(fallback)) {
       return { entry: fallback, servedLocale: defaultLocale, isFallback: true };

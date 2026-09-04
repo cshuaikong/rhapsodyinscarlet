@@ -8,6 +8,12 @@ import {
   absoluteUrl,
   languageAlternates,
 } from '~/lib/url';
+import type { Locale } from '~/i18n/routing';
+
+// This site currently ships English only (locales = ['en']), but these tests
+// exercise the generic non-default-locale prefix logic with 'ja' so the suite
+// stays valid when a second language is added later. The cast is intentional.
+const JA = 'ja' as Locale;
 
 describe('url helpers', () => {
   describe('localizePath', () => {
@@ -17,13 +23,13 @@ describe('url helpers', () => {
     });
 
     it('prepends the locale prefix for non-default locales', () => {
-      expect(localizePath('/bosses', 'ja')).toBe('/ja/bosses/');
-      expect(localizePath('/bosses/emberfang', 'ja')).toBe('/ja/bosses/emberfang/');
+      expect(localizePath('/bosses', JA)).toBe('/ja/bosses/');
+      expect(localizePath('/bosses/emberfang', JA)).toBe('/ja/bosses/emberfang/');
     });
 
     it('ensures leading slash on input without one', () => {
       expect(localizePath('about', 'en')).toBe('/about/');
-      expect(localizePath('about', 'ja')).toBe('/ja/about/');
+      expect(localizePath('about', JA)).toBe('/ja/about/');
     });
   });
 
@@ -32,14 +38,14 @@ describe('url helpers', () => {
       expect(homeUrl('en')).toBe('/');
     });
     it('returns /ja for non-default locale', () => {
-      expect(homeUrl('ja')).toBe('/ja/');
+      expect(homeUrl(JA)).toBe('/ja/');
     });
   });
 
   describe('listPath', () => {
     it('builds the correct list URL for each locale', () => {
       expect(listPath('bosses', 'en')).toBe('/bosses/');
-      expect(listPath('bosses', 'ja')).toBe('/ja/bosses/');
+      expect(listPath('bosses', JA)).toBe('/ja/bosses/');
       expect(listPath('codes', 'en')).toBe('/codes/');
     });
   });
@@ -47,14 +53,14 @@ describe('url helpers', () => {
   describe('detailPath', () => {
     it('builds the correct article URL for each locale', () => {
       expect(detailPath('bosses', 'emberfang', 'en')).toBe('/bosses/emberfang/');
-      expect(detailPath('bosses', 'emberfang', 'ja')).toBe('/ja/bosses/emberfang/');
+      expect(detailPath('bosses', 'emberfang', JA)).toBe('/ja/bosses/emberfang/');
     });
 
     it('handles nested slugs', () => {
       expect(detailPath('guides', 'early-game/beginner', 'en')).toBe(
         '/guides/early-game/beginner/',
       );
-      expect(detailPath('guides', 'early-game/beginner', 'ja')).toBe(
+      expect(detailPath('guides', 'early-game/beginner', JA)).toBe(
         '/ja/guides/early-game/beginner/',
       );
     });
@@ -92,26 +98,26 @@ describe('slugifyTag (CJK / non-ASCII fallback)', () => {
 describe('absoluteUrl', () => {
   it('prefixes siteUrl and applies the locale prefix rules', () => {
     expect(absoluteUrl('/bosses', 'en')).toMatch(/^https:\/\/[^/]+\/bosses\/$/);
-    expect(absoluteUrl('/bosses', 'ja')).toMatch(/^https:\/\/[^/]+\/ja\/bosses\/$/);
-    expect(absoluteUrl('/', 'ja')).toMatch(/^https:\/\/[^/]+\/ja\/$/);
+    expect(absoluteUrl('/bosses', JA)).toMatch(/^https:\/\/[^/]+\/ja\/bosses\/$/);
+    expect(absoluteUrl('/', JA)).toMatch(/^https:\/\/[^/]+\/ja\/$/);
   });
 });
 
 describe('languageAlternates', () => {
   it('builds absolute hreflang entries for exactly the given locales', () => {
-    const alts = languageAlternates((loc) => detailPath('bosses', 'x', loc), ['en', 'ja']);
+    const alts = languageAlternates((loc) => detailPath('bosses', 'x', loc), ['en', JA]);
     expect(alts).toHaveLength(2);
     expect(alts[0]).toEqual({ hreflang: 'en', href: expect.stringMatching(/\/bosses\/x\/$/) });
     expect(alts[1]).toEqual({ hreflang: 'ja', href: expect.stringMatching(/\/ja\/bosses\/x\/$/) });
   });
 
   it('never emits x-default (BaseLayout derives it separately)', () => {
-    const alts = languageAlternates((loc) => listPath('guides', loc), ['en', 'ja']);
+    const alts = languageAlternates((loc) => listPath('guides', loc), ['en', JA]);
     expect(alts.some((a) => a.hreflang === 'x-default')).toBe(false);
   });
 
   it('honors a reduced locale list (single-language article)', () => {
-    const alts = languageAlternates((loc) => detailPath('bosses', 'x', loc), ['ja']);
+    const alts = languageAlternates((loc) => detailPath('bosses', 'x', loc), [JA]);
     expect(alts).toHaveLength(1);
     expect(alts[0].hreflang).toBe('ja');
   });

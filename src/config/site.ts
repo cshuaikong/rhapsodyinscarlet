@@ -64,7 +64,7 @@ export interface SiteConfig {
 export const site: SiteConfig = {
   name: 'Rhapsody in Scarlet Wiki',
   shortName: 'RIS Wiki',
-  description: 'Complete Rhapsody in Scarlet wiki with guides, codes, tier lists, and tips. Every page carries a last-verified date.',
+  description: 'Complete Rhapsody in Scarlet wiki — character, beast, story, and gameplay guides for Konami\'s 1920s jazz action-adventure. Every page carries a last-verified date.',
   domain: 'rhapsodyinscarlet.wiki',
   tagline: 'Your home for everything Rhapsody in Scarlet',
   legalNotice: 'Rhapsody in Scarlet Wiki is a fan-made community site. Not affiliated with or endorsed by the game developer.',
