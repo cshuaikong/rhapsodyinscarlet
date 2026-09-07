@@ -117,35 +117,6 @@ function buildLastmodMap(
     }
   }
 
-  // Handbook chapters (docs/handbook/<locale>/<slug>.md) → /landing/docs/<slug>
-  // (+ /zh/ prefix). Same frontmatter-driven lastmod contract; the `updated`
-  // field is optional, so chapters without it simply keep the default.
-  const hb = path.resolve('./docs/handbook');
-  if (fs.existsSync(hb)) {
-    for (const loc of ['en', 'zh']) {
-      const dir = path.join(hb, loc);
-      if (!fs.existsSync(dir)) continue;
-      for (const entry of fs.readdirSync(dir)) {
-        if (!entry.endsWith('.md')) continue;
-        const src = fs.readFileSync(path.join(dir, entry), 'utf8');
-        const fm = src.split('---')[1] ?? '';
-        const iso = fm.match(/^updated:\s*(.+)$/m)?.[1]?.trim().replace(/['"]/g, '');
-        if (!iso) continue;
-        const date = new Date(iso);
-        if (Number.isNaN(date.getTime())) continue;
-        const slug = entry.replace(/\.md$/, '');
-        const pagePath = loc === 'en' ? `/landing/docs/${slug}` : `/zh/landing/docs/${slug}`;
-        map.set(pagePath, date.toISOString());
-        // Hub pages: newest chapter wins.
-        const hubPath = loc === 'en' ? '/landing/docs' : '/zh/landing/docs';
-        const existing = map.get(hubPath);
-        if (!existing || existing < date.toISOString()) {
-          map.set(hubPath, date.toISOString());
-        }
-      }
-    }
-  }
-
   return map;
 }
 
@@ -155,6 +126,12 @@ const siteOrigin = process.env.SITE_URL || 'https://anvilwiki.pages.dev';
 // lookup tables above (lastmodMap / noindexPaths / coverage keys) are built
 // slash-free — normalize once here instead of at every key construction.
 const normalizePath = (p: string) => (p !== '/' && p.endsWith('/') ? p.slice(0, -1) : p);
+
+// The bundled project handbook is useful to site owners and remains publicly
+// accessible/searchable, but it is not game content and should not be
+// submitted to search engines as part of a fork's SEO surface.
+const isHandbookPath = (pagePath: string) =>
+  /^\/(?:[a-z]{2,3}\/)?landing\/docs(?:\/|$)/.test(pagePath);
 
 const noindexPaths = new Set<string>();
 const localeCoverage = new Map<string, Set<string>>();
@@ -239,7 +216,10 @@ export default defineConfig({
       // Alternates are built per-URL in `serialize` from real MDX coverage.
       // noindex articles stay out of the sitemap (self-contradictory signal
       // otherwise — the page asks not to be indexed while the sitemap submits it).
-      filter: (url) => !noindexPaths.has(normalizePath(decodeURIComponent(new URL(url).pathname))),
+      filter: (url) => {
+        const pagePath = normalizePath(decodeURIComponent(new URL(url).pathname));
+        return !noindexPaths.has(pagePath) && !isHandbookPath(pagePath);
+      },
       // Inject <lastmod> from article frontmatter (see buildLastmodMap) and
       // hreflang alternates that mirror the page-level truth (see alternatesFor).
       serialize(item) {

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **文档中心不再进入 sitemap**：排除 `/landing/docs/`、`/zh/landing/docs/` 及其全部子页面，避免 fork 站把模板使用手册当作游戏内容提交给搜索引擎；文档页面访问与 Pagefind 站内搜索不受影响。
+
 ## [2.14.1] — 2026-09-03
 
 **文档中心顶栏优化：搜索触发器升级为品牌组旁的加宽搜索胶囊。**
