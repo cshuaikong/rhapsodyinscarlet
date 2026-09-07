@@ -77,7 +77,7 @@ export const site: SiteConfig = {
   game: {
     name: 'Rhapsody in Scarlet',
     platform: 'PlayStation®5 / XBOX Series X|S / Steam®',
-    developer: 'KONAMI Osaka Studio',
+    developer: 'KONAMI',
     genre: 'Action Adventure',
     releaseDate: '',
   },
